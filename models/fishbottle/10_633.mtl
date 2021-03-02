@@ -1,0 +1,22 @@
+newmtl 633-2_Material_u1_v1
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+d 1
+Ns 0.00000
+illum 1
+map_Kd 10_633-2_Material_u1_v1.jpg
+
+newmtl 633-1_Material_u1_v1
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+d 1
+Ns 0.00000
+illum 1
+map_Kd 10_633-1_Material_u1_v1.jpg
+
+newmtl NO_MATERIAL
+Ka 1.000000 0.000000 0.000000
+Ks 0.000000 0.000000 0.000000
+d 1
+Ns 0.00000
+illum 1
