@@ -162,7 +162,7 @@ const light = createLight();
 
 
 for (const [name, object] of Object.entries(artimg)) {
-  object.addEventListener("click", (event) => {
+  object.addEventListener("mousedown", (event) => {
     event.stopPropagation();
     console.log(`${name} artimg was clicked`);
     const cube = event.target;
