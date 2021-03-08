@@ -48,7 +48,7 @@ function createLight() {
 // 將材質及圖片群組
 let canvas2d;
 
-function makeInstance(canvas2d, x, y, z) {
+function makeInstance(canvas2d, x, y, z, materialimg) {
   var loaderimg = new THREE.TextureLoader();
   canvas2d = new THREE.PlaneGeometry(300, 200 * 0.75);
 
@@ -69,6 +69,30 @@ function makeInstance(canvas2d, x, y, z) {
   meshimg.position.z = z;
 
   return meshimg;
+}
+
+function makeInstance2(canvas2d, x, y, z, materialimg) {
+  var loaderimg = new THREE.TextureLoader();
+  canvas2d = new THREE.PlaneGeometry(200, 200 * 0.75);
+
+  // 載入客製化圖片到材質內
+  materialimg = new THREE.MeshLambertMaterial({
+    map: loaderimg.load("./common/img/img02.jpg"),
+  });
+
+  //(canvas2d & materialimg) 載入進meshimg
+  meshimg2 = new THREE.Mesh(canvas2d, materialimg);
+
+  // 加入場景
+  scene.add(meshimg2);
+
+  // 設定位置
+  meshimg2.position.x = x;
+  meshimg2.position.y = y;
+  meshimg2.position.z = z;
+  meshimg2.rotation.y = 89.55;
+
+  return meshimg2;
 }
 
 // model 載入進度
@@ -108,7 +132,6 @@ mtlLoader.load("wall01.mtl", function (materials) {
     const mesh = object;
 
     mesh.position.y = 50;
-
     mesh.opacity = 0.5;
     scene.add(mesh);
   });
@@ -155,7 +178,7 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 const artimg = {
   one: makeInstance(canvas2d, 0, 50, 11),
   two: makeInstance(canvas2d, 400, 50, 11),
-  three: makeInstance(canvas2d, -400, 50, 11),
+  three: makeInstance2(canvas2d, -240, 50, 150),
 };
 
 const light = createLight();
@@ -165,7 +188,8 @@ for (const [name, object] of Object.entries(artimg)) {
   object.addEventListener("mousedown", (event) => {
     event.stopPropagation();
     console.log(`${name} artimg was clicked`);
-    const cube = event.target;
+    const meshimg = event.target;
+    const meshimg2 = event.target;
     const coords = {
       x: camera.position.x,
       y: camera.position.y,
@@ -173,7 +197,8 @@ for (const [name, object] of Object.entries(artimg)) {
     };
     controls.enabled = false;
     const tween = new TWEEN.Tween(coords)
-      .to({ x: cube.position.x, y: cube.position.y, z: 200 })
+      .to({ x: meshimg.position.x, y: meshimg.position.y, z: 200 })
+      .to({ x: meshimg2.position.x, y: meshimg2.position.y, z: 200 })
       .easing(TWEEN.Easing.Quadratic.Out)
       .onUpdate(() => {
         controls.target.set(coords.x, coords.y, controls.target.z);
@@ -182,9 +207,10 @@ for (const [name, object] of Object.entries(artimg)) {
       })
       .onComplete(() => {
         controls.enabled = true;
-        camera.lookAt(cube.position);
+        camera.lookAt(meshimg.position);
+        camera.lookAt(meshimg2.position);
         console.log(controls.target);
-        console.log(cube.position);
+        console.log(meshimg.position);
       })
       .start();
   });
