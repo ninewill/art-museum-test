@@ -2,12 +2,16 @@
 const scene = createScene();
 const camera = createCamera();
 const renderer = createRenderer();
+//相機控制
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
 const interactionManager = new THREE.InteractionManager(
   renderer,
   camera,
   renderer.domElement
 );
 
+const light = createLight();
+scene.add(light);
 
 //場景
 function createScene() {
@@ -24,8 +28,17 @@ function createCamera() {
     1,
     10000
   );
-  camera.position.set(0, 800, 1000);
+  camera.position.set(0, 350, 900);
   return camera;
+}
+
+//渲染到畫面
+function createRenderer() {
+  const root = document.getElementById("info");
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  root.appendChild(renderer.domElement);
+  return renderer;
 }
 
 //燈光
@@ -43,125 +56,11 @@ function createLight() {
   return ambient, light, helperdir;
 }
 
-//3D幾何物件
 
-// 將材質及圖片群組
-let canvas2d;
-
-function makeInstance(canvas2d, x, y, z, materialimg) {
-  var loaderimg = new THREE.TextureLoader();
-  canvas2d = new THREE.PlaneGeometry(300, 200 * 0.75);
-
-  // 載入客製化圖片到材質內
-  materialimg = new THREE.MeshLambertMaterial({
-    map: loaderimg.load("./common/img/unnamed.jpg"),
-  });
-
-  //(canvas2d & materialimg) 載入進meshimg
-  meshimg = new THREE.Mesh(canvas2d, materialimg);
-
-  // 加入場景
-  scene.add(meshimg);
-
-  // 設定位置
-  meshimg.position.x = x;
-  meshimg.position.y = y;
-  meshimg.position.z = z;
-
-  return meshimg;
-}
-
-function makeInstance2(canvas2d, x, y, z, materialimg) {
-  var loaderimg = new THREE.TextureLoader();
-  canvas2d = new THREE.PlaneGeometry(200, 200 * 0.75);
-
-  // 載入客製化圖片到材質內
-  materialimg = new THREE.MeshLambertMaterial({
-    map: loaderimg.load("./common/img/img02.jpg"),
-  });
-
-  //(canvas2d & materialimg) 載入進meshimg
-  meshimg2 = new THREE.Mesh(canvas2d, materialimg);
-
-  // 加入場景
-  scene.add(meshimg2);
-
-  // 設定位置
-  meshimg2.position.x = x;
-  meshimg2.position.y = y;
-  meshimg2.position.z = z;
-  meshimg2.rotation.y = 89.55;
-
-  return meshimg2;
-}
-
-// model 載入進度
-const manager = new THREE.LoadingManager();
-// 開始載入
-manager.onStart = function (item, loaded, total) {
-  console.log("模型載入中...");
-};
-//載入完成
-manager.onLoad = function () {
-  console.log("模型載入完成");
-  // bar.destroy();
-};
-// 載入訊息
-manager.onProgress = function (item, loaded, total) {
-  console.log(item, loaded, total);
-  console.log("Loaded:", Math.round((loaded / total) * 100, 2) + "%");
-  // bar.animate(1.0);
-};
-
-manager.onError = function (url) {
-  console.log("Error loading");
-};
-
-
-//載入模型
-const mtlLoader = new THREE.MTLLoader(manager);
-mtlLoader.setResourcePath("./models/wall/");
-mtlLoader.setPath("./models/wall/");
-mtlLoader.load("wall01.mtl", function (materials) {
-  materials.preload();
-
-  const objLoader = new THREE.OBJLoader(manager);
-  objLoader.setMaterials(materials);
-  objLoader.setPath("./models/wall/");
-  objLoader.load("wall01.obj", function (object) {
-    const mesh = object;
-
-    mesh.position.y = 50;
-    mesh.opacity = 0.5;
-    scene.add(mesh);
-  });
-});
 
 //地板
-const planeGeometry = new THREE.PlaneGeometry(2000, 2000);
-planeGeometry.rotateX(-Math.PI / 2);
-const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.2 });
-
-const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.position.y = -200;
-plane.receiveShadow = true;
-scene.add(plane);
-
 const helper = new THREE.GridHelper(2000, 50);
-helper.position.y = -50;
-helper.material.opacity = 1;
-helper.material.transparent = true;
 scene.add(helper);
-
-
-//渲染到畫面
-function createRenderer() {
-  const root = document.getElementById("info");
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  root.appendChild(renderer.domElement);
-  return renderer;
-}
 
 //動畫執行
 function animate(callback) {
@@ -172,65 +71,158 @@ function animate(callback) {
   requestAnimationFrame(loop);
 }
 
-//相機控制
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-const artimg = {
-  one: makeInstance(canvas2d, 0, 50, 11),
-  two: makeInstance(canvas2d, 400, 50, 11),
-  three: makeInstance2(canvas2d, -240, 50, 150),
-};
-
-const light = createLight();
-
-
-for (const [name, object] of Object.entries(artimg)) {
-  object.addEventListener("mousedown", (event) => {
-    event.stopPropagation();
-    console.log(`${name} artimg was clicked`);
-    const meshimg = event.target;
-    const meshimg2 = event.target;
-    const coords = {
-      x: camera.position.x,
-      y: camera.position.y,
-      z: camera.position.z,
-    };
-    controls.enabled = false;
-    const tween = new TWEEN.Tween(coords)
-      .to({ x: meshimg.position.x, y: meshimg.position.y, z: 200 })
-      .to({ x: meshimg2.position.x, y: meshimg2.position.y, z: 200 })
-      .easing(TWEEN.Easing.Quadratic.Out)
-      .onUpdate(() => {
-        controls.target.set(coords.x, coords.y, controls.target.z);
-        camera.position.set(coords.x, coords.y, coords.z);
-        controls.update();
-      })
-      .onComplete(() => {
-        controls.enabled = true;
-        camera.lookAt(meshimg.position);
-        camera.lookAt(meshimg2.position);
-        console.log(controls.target);
-        console.log(meshimg.position);
-      })
-      .start();
-  });
-  interactionManager.add(object);
-  scene.add(object);
-}
-
 //RWD響應
-window.addEventListener("resize", onWindowResize, false);
-
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-scene.add(light);
+window.addEventListener("resize", onWindowResize);
 
 animate((time) => {
   renderer.render(scene, camera);
   interactionManager.update();
   TWEEN.update(time);
 });
+
+
+
+
+
+
+
+// main code
+// 圖片路徑
+const source = [
+  'https://source.unsplash.com/L6xHmv2R3G4/1600x900',
+  'https://source.unsplash.com/ndZ1cXH34jU/1600x900',
+  'https://source.unsplash.com/UDv1n0xIpU8/1600x900',
+  'https://source.unsplash.com/9TqxiF46a_4/1600x900',
+  'https://source.unsplash.com/8kA6__zObq8/1600x900',
+]
+// 展版定位點
+const boardsPosition = [
+  [-250, 75, 200, 30],
+  [180, 75, 0, -30],
+  [-300, 75, 400, 30],
+  [0, 75, -230, 0],
+  [300, 75, 200, -30],
+]
+
+// 生成展版
+function createArtboard(imageSource) {
+  const boardWidth = 200;
+  const boardHeight = 150;
+  const boardDepth = 10;
+
+  function createBoard() {
+    const geometry = new THREE.BoxGeometry( boardWidth, boardHeight, boardDepth );
+    const material = new THREE.MeshBasicMaterial( {color: '#dedede'} );
+    return new THREE.Mesh( geometry, material );
+  }
+
+  function createCanvas(source) {
+    let textureLoader = new THREE.TextureLoader();
+    let canvas2d = new THREE.PlaneGeometry(boardWidth, boardWidth * 0.5625);
+  
+    // 載入客製化圖片到材質內
+    let material = new THREE.MeshLambertMaterial({
+      map: textureLoader.load(source),
+    });
+  
+    return new THREE.Mesh(canvas2d, material);
+  }
+
+  function addCameraPosition(obj) {
+    const geometry = new THREE.SphereGeometry(0);
+    const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    const sphere = new THREE.Mesh( geometry, material );
+    obj.add(sphere);
+    sphere.position.set(0,0,120);
+    sphere.name = 'cameraPosition';
+  }
+
+  // 製造組合
+  const artboard = createBoard();
+  const canvas = createCanvas(imageSource);
+  artboard.add(canvas);
+  canvas.position.set(0,0,6);
+  addCameraPosition(artboard);
+  return artboard;
+}
+
+// 遍歷生成展版 (返回 artbord 3D物件 與 camera定位點)
+// return {object: 展版 , camPosition: 定位點}
+let artboards = []
+source.forEach((path,index) => {
+  const artboard = createArtboard(path);
+  const pos = boardsPosition[index];
+  const deg = Math.PI * (pos[3] / 180);
+
+  artboard.position.set(pos[0], pos[1], pos[2]);
+  artboard.rotation.set(0, deg, 0);
+  artboard.updateMatrixWorld();
+  
+  let camPos = new THREE.Vector3();
+  artboard.getObjectByName('cameraPosition').getWorldPosition(camPos);
+  let camQua = artboard.quaternion;
+
+  artboards.push({
+    object: artboard,
+    camPosition: camPos,
+    camQuaternion: camQua
+  });
+})
+
+
+// 展版點擊事件綁定
+artboards.forEach((boardData) => {
+
+  const { object, camPosition, camQuaternion } = boardData;
+
+  object.addEventListener("click", (e) => {
+    controls.enabled = false;
+    e.stopPropagation();
+    if(e.originalEvent.button !== 0) return;
+
+    // 暫存的位置 (當前攝影機的位置)
+    const tempPos = {
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z,
+      t: 0
+    };
+
+    // 最終的位置 
+    const finalPos = {
+      x: camPosition.x,
+      y: camPosition.y,
+      z: camPosition.z,
+      t: 1
+    }
+    
+    
+    // 不斷改變 tempPos ，使其趨近於(最終等於) finalPos
+    new TWEEN.Tween(tempPos)
+      .to(finalPos)
+      .easing(TWEEN.Easing.Quadratic.Out)
+      .onUpdate(() => {
+        // 每次更新 tempPos 時重新校準鏡頭
+        camera.position.set(tempPos.x, tempPos.y, tempPos.z);
+
+        // lookAt待優化
+        // camera.lookAt(object.position);
+        camera.quaternion.slerp(camQuaternion, tempPos.t);
+      })
+      .onComplete(() => {
+        // 結束時重設 controls 中心點
+        controls.target.set(object.position.x, object.position.y, object.position.z);
+        controls.update();
+        controls.enabled = true;
+      })
+      .start();
+  });
+  interactionManager.add(object);
+  scene.add(object);
+})
