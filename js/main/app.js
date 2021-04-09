@@ -118,7 +118,7 @@ function createArtboard(imageSource) {
 
   function createBoard() {
     const geometry = new THREE.BoxGeometry( boardWidth, boardHeight, boardDepth );
-    const material = new THREE.MeshBasicMaterial( {color: '#dedede'} );
+    const material = new THREE.MeshBasicMaterial( {color: '#222222'} );
     return new THREE.Mesh( geometry, material );
   }
 
@@ -136,7 +136,10 @@ function createArtboard(imageSource) {
 
   function addCameraPosition(obj) {
     const geometry = new THREE.SphereGeometry(0);
-    const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+    const material = new THREE.MeshBasicMaterial( {
+      opacity: 0,
+      transparent: true
+    } );
     const sphere = new THREE.Mesh( geometry, material );
     obj.add(sphere);
     sphere.position.set(0,0,120);
